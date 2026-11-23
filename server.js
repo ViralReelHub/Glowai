@@ -39,36 +39,25 @@ function getSystemPrompt(mode = "Auto") {
     hour12: true,
   });
 
-  const base = [
-    `You are GlowAI, an accurate and honest AI assistant. Current date and time (IST): ${nowIST}.`,
-    "Strict accuracy rules:",
-    "1. Answer directly, accurately, and clearly in the user's language (Hindi, Hinglish, or English).",
-    "2. Never guess or invent facts, dates, prices, exam cutoffs, or links if unsure. Clearly state what is certain vs. approximate or needs official verification.",
-    "3. Double-check calculations, formulas, and logic before writing the final answer.",
-  ].join(" ");
+  const base = `You are GlowAI, a sharp, accurate, and helpful AI assistant. Current date and time (IST): ${nowIST}. Reply clearly and concisely in the user's language (Hindi, Hinglish, or English). Never guess facts or dates if unsure.`;
 
   if (mode === "Deeper analysis") {
-    return (
-      base +
-      " Break the problem down step-by-step, check edge cases and assumptions, and give a clear final conclusion."
-    );
+    return base + " Break down step-by-step, check edge cases, and give a clear final answer.";
   }
   if (mode === "Code and complex work") {
-    return (
-      base +
-      " Write clean, bug-free, runnable code and explain key parts and potential edge cases clearly."
-    );
+    return base + " Write clean, working code with clear explanation and edge cases.";
   }
   return base;
 }
 
-const ACCURATE_TEXT_MODELS = [
+const TEXT_MODELS = [
+  "openrouter/free",
   "meta-llama/llama-3.3-70b-instruct",
   "qwen/qwen-2.5-72b-instruct:free",
-  "openrouter/free",
+  "google/gemma-3-27b-it:free",
 ];
 
-const ACCURATE_VISION_MODELS = [
+const VISION_MODELS = [
   "google/gemma-3-27b-it:free",
   "qwen/qwen2.5-vl-72b-instruct:free",
   "openrouter/free",
@@ -76,7 +65,7 @@ const ACCURATE_VISION_MODELS = [
 
 async function callOpenRouter(apiKey, model, messages) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 18000);
+  const timer = setTimeout(() => controller.abort(), 45000);
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -90,17 +79,23 @@ async function callOpenRouter(apiKey, model, messages) {
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.2,
-        max_tokens: 2048,
+        temperature: 0.3,
+        max_tokens: 1500,
       }),
       signal: controller.signal,
     });
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data?.error?.message || "OpenRouter request failed");
+      const msg = data?.error?.message || `HTTP ${response.status}`;
+      throw new Error(`[${model}] ${msg}`);
     }
     return data?.choices?.[0]?.message?.content || "Koi jawab nahi mila.";
+  } catch (err) {
+    if (err?.name === "AbortError") {
+      throw new Error(`[${model}] Model ne 45s mein reply nahi diya (slow/busy).`);
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }
@@ -108,9 +103,9 @@ async function callOpenRouter(apiKey, model, messages) {
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const apiKey = (process.env.OPENROUTER_API_KEY || "").trim();
     if (!apiKey) {
-      return res.status(500).json({ error: "OPENROUTER_API_KEY set nahi hai." });
+      return res.status(500).json({ error: "Render Environment mein OPENROUTER_API_KEY set nahi hai." });
     }
 
     const {
@@ -142,18 +137,18 @@ app.post("/api/chat", async (req, res) => {
 
       if (!extractedText) {
         return res.status(400).json({
-          error: "PDF mein readable text nahi mila (scanned PDF ho sakti hai). Photo bhej kar try karein.",
+          error: "PDF ka text extract nahi ho paya (scanned PDF ho sakti hai). Photo attach karke bhejein.",
         });
       }
 
-      finalPrompt = `${finalPrompt || "Is document ko accurately summarize aur explain karo."}\n\n[Document: ${docName}]\n${extractedText.slice(0, 10000)}`;
+      finalPrompt = `${finalPrompt || "Is document ko clear aur accurately summarize karo."}\n\n[Document: ${docName}]\n${extractedText.slice(0, 9000)}`;
     }
 
     if (!finalPrompt && !imageBase64) {
       return res.status(400).json({ error: "Message, photo, ya document bhejein." });
     }
 
-    const formattedHistory = history.slice(-8).map((item) => ({
+    const formattedHistory = history.slice(-6).map((item) => ({
       role: item.role === "user" ? "user" : "assistant",
       content: item.text,
     }));
@@ -163,9 +158,7 @@ app.post("/api/chat", async (req, res) => {
       ? [
           {
             type: "text",
-            text:
-              finalPrompt ||
-              "Is photo ko dhyaan se dekho aur jo clearly visible hai uske aadhar par sahi jawab do.",
+            text: finalPrompt || "Is photo ko dekh kar jo poocha gaya hai uska sahi jawab do.",
           },
           {
             type: "image_url",
@@ -180,8 +173,8 @@ app.post("/api/chat", async (req, res) => {
       { role: "user", content: userContent },
     ];
 
-    const modelsToTry = isVision ? ACCURATE_VISION_MODELS : ACCURATE_TEXT_MODELS;
-    let lastError = "Response error.";
+    const modelsToTry = isVision ? VISION_MODELS : TEXT_MODELS;
+    let lastError = "OpenRouter request failed.";
 
     for (const model of modelsToTry) {
       try {
@@ -195,7 +188,7 @@ app.post("/api/chat", async (req, res) => {
     return res.status(400).json({ error: `API Error: ${lastError}` });
   } catch (err) {
     console.error("GlowAI Error:", err);
-    res.status(500).json({ error: "Response generate karne mein error aaya." });
+    res.status(500).json({ error: err?.message || "Server response error." });
   }
 });
 
