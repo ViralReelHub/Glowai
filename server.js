@@ -16,13 +16,13 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.post("/api/chat", async (req, res) => {
   try {
     if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "Render Environment mein GEMINI_API_KEY missing hai." });
+      return res.status(500).json({ error: "GEMINI_API_KEY set nahi hai." });
     }
 
     const { message, history = [] } = req.body;
@@ -31,9 +31,9 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const contents = [
-      ...history.slice(-12).map((m) => ({
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.text }],
+      ...history.slice(-10).map((item) => ({
+        role: item.role === "user" ? "user" : "model",
+        parts: [{ text: item.text }],
       })),
       { role: "user", parts: [{ text: message }] },
     ];
@@ -46,11 +46,10 @@ app.post("/api/chat", async (req, res) => {
     res.json({ reply: response.text || "Koi jawab nahi mila." });
   } catch (err) {
     console.error("Gemini API Error:", err);
-    const details = err?.message || "API request failed";
-    res.status(500).json({ error: `API Error: ${details}` });
+    res.status(500).json({ error: err?.message || "AI response error." });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`GlowAI running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
