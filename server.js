@@ -14,7 +14,6 @@ const __dirname = path.dirname(__filename);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// 24/7 Keep-Alive Health Check Route
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", service: "GlowAI", active: true });
 });
@@ -37,6 +36,13 @@ function getSystemPrompt(mode = "Auto") {
   }
   return base;
 }
+
+const MODELS_TO_TRY = [
+  "openrouter/free",
+  "meta-llama/llama-3.3-70b-instruct",
+  "qwen/qwen-2.5-72b-instruct:free",
+  "google/gemma-3-27b-it:free",
+];
 
 app.post("/api/chat", async (req, res) => {
   try {
@@ -61,29 +67,34 @@ app.post("/api/chat", async (req, res) => {
       { role: "user", content: message.trim() },
     ];
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://glowai-dzs8.onrender.com",
-        "X-Title": "GlowAI",
-      },
-      body: JSON.stringify({
-        model: "meta-llama/llama-3.3-70b-instruct:free",
-        messages,
-        temperature: 0.6,
-      }),
-    });
+    let lastError = "OpenRouter API request failed.";
 
-    const data = await response.json();
-    if (!response.ok) {
-      const errMsg = data?.error?.message || "OpenRouter API request failed.";
-      return res.status(response.status).json({ error: `API Error: ${errMsg}` });
+    for (const model of MODELS_TO_TRY) {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://glowai-dzs8.onrender.com",
+          "X-Title": "GlowAI",
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.6,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        const reply = data?.choices?.[0]?.message?.content || "Koi jawab nahi mila.";
+        return res.json({ reply, modelUsed: model });
+      }
+
+      lastError = data?.error?.message || lastError;
     }
 
-    const reply = data?.choices?.[0]?.message?.content || "Koi jawab nahi mila.";
-    res.json({ reply });
+    return res.status(400).json({ error: `API Error: ${lastError}` });
   } catch (err) {
     console.error("GlowAI Server Error:", err);
     res.status(500).json({ error: "Server par response generate karne mein error aaya." });
