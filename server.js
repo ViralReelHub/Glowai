@@ -19,8 +19,18 @@ app.get("/health", (req, res) => {
 });
 
 function getSystemPrompt(mode = "Auto") {
-  const base =
-    "You are GlowAI, a sharp, helpful, and accurate AI assistant. Give clear, structured, well-reasoned answers. Match the user's language (Hindi, Hinglish, or English).";
+  const nowIST = new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const base = `You are GlowAI, a sharp, helpful, and accurate AI assistant. Current date and time in India (IST): ${nowIST}. Give clear, structured, well-reasoned answers. Match the user's language (Hindi, Hinglish, or English).`;
 
   if (mode === "Deeper analysis") {
     return (
