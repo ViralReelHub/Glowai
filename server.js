@@ -39,13 +39,23 @@ function getSystemPrompt(mode = "Auto") {
     hour12: true,
   });
 
-  const base = `You are GlowAI, a sharp, accurate, and helpful AI assistant. Current date and time (IST): ${nowIST}. Reply clearly and concisely in the user's language (Hindi, Hinglish, or English). Never guess facts or dates if unsure.`;
+  const base = [
+    `You are GlowAI, a helpful, clear, and practical AI assistant. Current time (IST): ${nowIST}.`,
+    "Match the user's language naturally (clear Hinglish, Hindi, or English—avoid broken or unnatural phrasing).",
+    "Give direct, accurate, well-organized answers without filler. If something is uncertain or needs official verification, say so plainly.",
+  ].join(" ");
 
   if (mode === "Deeper analysis") {
-    return base + " Break down step-by-step, check edge cases, and give a clear final answer.";
+    return (
+      base +
+      " Break down the problem step-by-step, check edge cases, show clear reasoning, and conclude with a crisp summary."
+    );
   }
   if (mode === "Code and complex work") {
-    return base + " Write clean, working code with clear explanation and edge cases.";
+    return (
+      base +
+      " Write clean, practical, bug-free code with concise explanations and edge cases."
+    );
   }
   return base;
 }
@@ -80,7 +90,7 @@ async function callOpenRouter(apiKey, model, messages) {
         model,
         messages,
         temperature: 0.3,
-        max_tokens: 1500,
+        max_tokens: 1800,
       }),
       signal: controller.signal,
     });
@@ -141,14 +151,14 @@ app.post("/api/chat", async (req, res) => {
         });
       }
 
-      finalPrompt = `${finalPrompt || "Is document ko clear aur accurately summarize karo."}\n\n[Document: ${docName}]\n${extractedText.slice(0, 9000)}`;
+      finalPrompt = `${finalPrompt || "Is document ko clear aur accurately summarize karo."}\n\n[Document: ${docName}]\n${extractedText.slice(0, 9500)}`;
     }
 
     if (!finalPrompt && !imageBase64) {
       return res.status(400).json({ error: "Message, photo, ya document bhejein." });
     }
 
-    const formattedHistory = history.slice(-6).map((item) => ({
+    const formattedHistory = history.slice(-8).map((item) => ({
       role: item.role === "user" ? "user" : "assistant",
       content: item.text,
     }));
