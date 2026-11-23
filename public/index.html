@@ -10,11 +10,12 @@
       --bg: #000000;
       --surface: #121316;
       --elevated: #1c1d21;
-      --hover: #25272d;
+      --sheet: #18191c;
+      --tile: #24262b;
+      --hover: #2c2e34;
       --text: #eceef2;
       --muted: #9aa0a6;
       --border: rgba(255, 255, 255, 0.1);
-      --accent: #6c8cff;
     }
 
     * {
@@ -122,9 +123,7 @@
       z-index: 50;
     }
 
-    .mode-menu.open {
-      display: flex;
-    }
+    .mode-menu.open { display: flex; }
 
     .mode-item {
       display: flex;
@@ -141,31 +140,10 @@
       width: 100%;
     }
 
-    .mode-item:hover {
-      background: var(--hover);
-    }
-
-    .mode-title {
-      font-size: 16px;
-      font-weight: 500;
-      display: block;
-    }
-
-    .mode-desc {
-      font-size: 13px;
-      color: var(--muted);
-      display: block;
-      margin-top: 2px;
-    }
-
-    .badge-new {
-      font-size: 12px;
-      background: #2c303a;
-      color: #d0d7de;
-      padding: 3px 8px;
-      border-radius: 999px;
-      align-self: center;
-    }
+    .mode-item:hover { background: var(--hover); }
+    .mode-title { font-size: 16px; font-weight: 500; display: block; }
+    .mode-desc { font-size: 13px; color: var(--muted); display: block; margin-top: 2px; }
+    .badge-new { font-size: 12px; background: #2c303a; color: #d0d7de; padding: 3px 8px; border-radius: 999px; align-self: center; }
 
     /* Right '...' Action Menu */
     .action-menu {
@@ -184,9 +162,7 @@
       z-index: 50;
     }
 
-    .action-menu.open {
-      display: flex;
-    }
+    .action-menu.open { display: flex; }
 
     .action-item {
       display: flex;
@@ -203,9 +179,7 @@
       width: 100%;
     }
 
-    .action-item:hover {
-      background: var(--hover);
-    }
+    .action-item:hover { background: var(--hover); }
 
     /* Full-Screen Navigation Drawer */
     .drawer {
@@ -218,9 +192,7 @@
       padding: 12px 16px 14px;
     }
 
-    .drawer.open {
-      display: flex;
-    }
+    .drawer.open { display: flex; }
 
     .drawer-top {
       height: 48px;
@@ -230,19 +202,8 @@
       margin-bottom: 10px;
     }
 
-    .drawer-brand {
-      font-size: 22px;
-      font-weight: 500;
-    }
-
-    .drawer-scroll {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding-bottom: 12px;
-    }
+    .drawer-brand { font-size: 22px; font-weight: 500; }
+    .drawer-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; }
 
     .drawer-link {
       display: flex;
@@ -259,16 +220,8 @@
       width: 100%;
     }
 
-    .drawer-link:hover {
-      background: var(--surface);
-    }
-
-    .section-title {
-      font-size: 14px;
-      color: var(--muted);
-      padding: 14px 10px 8px;
-      font-weight: 400;
-    }
+    .drawer-link:hover { background: var(--surface); }
+    .section-title { font-size: 14px; color: var(--muted); padding: 14px 10px 8px; font-weight: 400; }
 
     .recent-row {
       display: flex;
@@ -281,16 +234,8 @@
       font-size: 15px;
     }
 
-    .recent-row.active, .recent-row:hover {
-      background: var(--surface);
-    }
-
-    .recent-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
-    }
+    .recent-row.active, .recent-row:hover { background: var(--surface); }
+    .recent-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 
     .drawer-footer {
       border-top: 1px solid var(--border);
@@ -300,36 +245,14 @@
       justify-content: space-between;
     }
 
-    .user-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .user-card { display: flex; align-items: center; gap: 12px; }
     .avatar-ring {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       background: linear-gradient(135deg, #4285f4, #9b72cb);
-      display: grid;
-      place-items: center;
-      font-weight: 600;
-      color: #fff;
-      font-size: 15px;
+      display: grid; place-items: center; font-weight: 600; color: #fff; font-size: 15px;
     }
-
-    .user-name {
-      font-size: 15px;
-      font-weight: 500;
-      display: block;
-    }
-
-    .user-tier {
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      display: block;
-    }
+    .user-name { font-size: 15px; font-weight: 500; display: block; }
+    .user-tier { font-size: 11px; letter-spacing: 0.06em; color: var(--muted); display: block; }
 
     /* Chat Stream */
     .chat-area {
@@ -348,31 +271,11 @@
       min-height: 100%;
     }
 
-    .empty-state {
-      margin: auto;
-      text-align: center;
-      color: var(--muted);
-      padding: 24px;
-    }
+    .empty-state { margin: auto; text-align: center; color: var(--muted); padding: 24px; }
+    .empty-state h2 { color: var(--text); font-size: 26px; font-weight: 500; margin-bottom: 8px; }
 
-    .empty-state h2 {
-      color: var(--text);
-      font-size: 26px;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .turn {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .user-msg-row {
-      display: flex;
-      justify-content: flex-end;
-    }
-
+    .turn { display: flex; flex-direction: column; gap: 10px; }
+    .user-msg-row { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .user-bubble {
       background: var(--elevated);
       color: var(--text);
@@ -383,44 +286,39 @@
       line-height: 1.5;
       white-space: pre-wrap;
     }
-
-    .ai-msg-row {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
+    .user-img-preview {
+      max-width: 220px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
     }
 
+    .ai-msg-row { display: flex; gap: 12px; align-items: flex-start; }
     .ai-mark {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
+      width: 26px; height: 26px; border-radius: 50%;
       background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
-      display: grid;
-      place-items: center;
-      font-size: 13px;
-      color: #fff;
-      flex-shrink: 0;
-      margin-top: 3px;
+      display: grid; place-items: center; font-size: 13px; color: #fff; flex-shrink: 0; margin-top: 3px;
     }
-
-    .ai-content {
-      flex: 1;
-      font-size: 15.5px;
-      line-height: 1.65;
-      color: var(--text);
-      min-width: 0;
-    }
-
+    .ai-content { flex: 1; font-size: 15.5px; line-height: 1.65; color: var(--text); min-width: 0; }
     .ai-content p { margin-bottom: 10px; }
     .ai-content p:last-child { margin-bottom: 0; }
-    .ai-content pre {
-      background: var(--surface);
+    .ai-content pre { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; overflow-x: auto; margin: 10px 0; }
+
+    /* Attachment Preview Bar */
+    .attach-preview {
+      max-width: 780px;
+      margin: 0 auto 8px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: var(--elevated);
+      padding: 8px 12px;
+      border-radius: 16px;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      overflow-x: auto;
-      margin: 10px 0;
     }
+    .attach-preview.show { display: flex; }
+    .attach-preview img { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; }
+    .attach-name { flex: 1; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .remove-attach { background: transparent; border: none; color: var(--text); font-size: 18px; cursor: pointer; }
 
     /* Bottom Composer Pill */
     .composer-wrap {
@@ -437,73 +335,191 @@
       padding: 8px 10px 8px 12px;
       display: flex;
       align-items: flex-end;
-      gap: 8px;
+      gap: 6px;
       border: 1px solid transparent;
+      transition: border-color 0.18s ease, background 0.18s ease;
     }
 
     .composer-pill:focus-within {
       border-color: var(--border);
+      background: #202227;
     }
 
     .plus-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
-      color: var(--text);
-      font-size: 24px;
-      line-height: 1;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 50%; border: none;
+      background: transparent; color: var(--text); font-size: 24px; line-height: 1;
+      display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
+      transition: background 0.15s ease;
     }
-
-    .plus-btn:hover {
-      background: var(--hover);
-    }
+    .plus-btn:hover { background: var(--hover); }
 
     textarea {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text);
-      font-size: 16px;
-      line-height: 1.45;
-      resize: none;
-      max-height: 150px;
-      padding: 7px 2px;
+      flex: 1; background: transparent; border: none; outline: none; color: var(--text);
+      font-size: 16px; line-height: 1.45; resize: none; max-height: 150px; padding: 7px 2px;
     }
+    textarea::placeholder { color: #b0b5bd; }
 
-    textarea::placeholder {
-      color: #b0b5bd;
-    }
-
-    .stop-send-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-      border: none;
-      background: var(--hover);
-      color: var(--text);
-      font-size: 14px;
-      display: grid;
-      place-items: center;
-      cursor: pointer;
+    .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       flex-shrink: 0;
     }
 
-    .stop-send-btn.ready {
+    .mic-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--tile);
+      color: var(--text);
+      font-size: 16px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .mic-btn:hover {
+      background: var(--hover);
+      transform: scale(1.04);
+    }
+
+    .mic-btn.listening {
+      background: #dc2626;
+      border-color: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.25);
+      animation: micPulse 1.2s infinite;
+    }
+
+    .send-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: var(--hover);
+      color: var(--muted);
+      font-size: 17px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+    }
+
+    .send-btn.ready {
       background: var(--text);
       color: var(--bg);
-      border-radius: 50%;
-      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .send-btn.ready:hover {
+      transform: scale(1.06);
+    }
+
+    .send-btn.generating {
+      background: var(--tile);
+      color: var(--text);
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    /* Bottom Sheet for '+' Attachment & Create Tools */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 70;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sheet-backdrop.open { display: flex; }
+
+    .bottom-sheet {
+      width: 100%;
+      max-width: 540px;
+      background: var(--sheet);
+      border-top-left-radius: 26px;
+      border-top-right-radius: 26px;
+      padding: 10px 18px 26px;
+      border-top: 1px solid var(--border);
+      animation: slideUp 0.2s ease;
+    }
+
+    .sheet-handle {
+      width: 38px;
+      height: 4px;
+      border-radius: 999px;
+      background: #4b4e57;
+      margin: 0 auto 16px;
+    }
+
+    .tile-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .media-tile {
+      background: var(--tile);
+      border: none;
+      border-radius: 18px;
+      padding: 18px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .media-tile:hover { background: var(--hover); }
+    .media-tile span.tile-ico { font-size: 22px; }
+
+    .tool-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tool-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 6px;
+      border-radius: 14px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      width: 100%;
+    }
+    .tool-row:hover { background: var(--tile); }
+    .tool-ico { width: 28px; text-align: center; font-size: 20px; }
+    .tool-title { font-size: 16px; font-weight: 500; display: block; }
+    .tool-sub { font-size: 13px; color: var(--muted); display: block; margin-top: 2px; }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    @keyframes micPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.07); }
     }
   </style>
 </head>
 <body>
+  <!-- Hidden File Inputs -->
+  <input type="file" id="photo-input" accept="image/*" hidden />
+  <input type="file" id="camera-input" accept="image/*" capture="environment" hidden />
+
   <!-- Top Bar -->
   <header class="topbar">
     <div class="top-left">
@@ -572,15 +588,15 @@
     <div class="drawer-scroll">
       <button class="drawer-link" id="drawer-new-chat">✎ <span>New chat</span></button>
       <button class="drawer-link" onclick="alert('GlowAI Library')">⊞ <span>Library</span></button>
-      <button class="drawer-link" onclick="alert('Image generation coming soon')">🖼 <span>Images</span></button>
+      <button class="drawer-link" onclick="alert('Image studio')">🖼 <span>Images</span></button>
       <button class="drawer-link" onclick="alert('Scheduled tasks')">🕒 <span>Scheduled</span></button>
       <button class="drawer-link" onclick="alert('Customise GlowAI')">⚙ <span>Customise</span></button>
-      <button class="drawer-link" onclick="alert('Video tools')">🎬 <span>Videos</span></button>
+      <button class="drawer-link" onclick="alert('Video studio')">🎬 <span>Videos</span></button>
 
       <div class="section-title">Notebooks</div>
       <button class="drawer-link" id="add-notebook">+ <span>New notebook</span></button>
 
-      <div class="section-title" id="filter-label">All</div>
+      <div class="section-title">All</div>
       <div id="drawer-history"></div>
     </div>
     <div class="drawer-footer">
@@ -602,29 +618,91 @@
 
   <!-- Bottom Floating Pill Input -->
   <div class="composer-wrap">
+    <div class="attach-preview" id="attach-preview">
+      <img id="attach-thumb" src="" alt="Preview" />
+      <span class="attach-name" id="attach-name"></span>
+      <button type="button" class="remove-attach" id="remove-attach">✕</button>
+    </div>
     <form class="composer-pill" id="composer">
-      <button type="button" class="plus-btn" id="plus-btn" title="New prompt">+</button>
-      <textarea id="prompt" rows="1" placeholder="Ask GlowAI" required></textarea>
-      <button type="submit" class="stop-send-btn" id="action-btn" title="Send">■</button>
+      <button type="button" class="plus-btn" id="plus-btn" title="More tools">+</button>
+      <textarea id="prompt" rows="1" placeholder="Ask GlowAI"></textarea>
+      <div class="right-controls">
+        <button type="button" class="mic-btn" id="mic-btn" title="Speak">🎤</button>
+        <button type="submit" class="send-btn" id="action-btn" title="Send">↑</button>
+      </div>
     </form>
+  </div>
+
+  <!-- '+' Bottom Sheet Drawer -->
+  <div class="sheet-backdrop" id="plus-sheet">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="tile-row">
+        <button type="button" class="media-tile" id="tile-photos">
+          <span class="tile-ico">🖼️</span>
+          <span>Photos</span>
+        </button>
+        <button type="button" class="media-tile" id="tile-camera">
+          <span class="tile-ico">📷</span>
+          <span>Camera</span>
+        </button>
+        <button type="button" class="media-tile" id="tile-avatar">
+          <span class="tile-ico">😊</span>
+          <span>Avatar</span>
+        </button>
+      </div>
+      <div class="tool-list">
+        <button type="button" class="tool-row" id="tool-images">
+          <span class="tool-ico">🎨</span>
+          <div>
+            <span class="tool-title">Create images</span>
+            <span class="tool-sub">Visualise and edit</span>
+          </div>
+        </button>
+        <button type="button" class="tool-row" id="tool-videos">
+          <span class="tool-ico">🎬</span>
+          <div>
+            <span class="tool-title">Create videos</span>
+            <span class="tool-sub">Bring ideas to life</span>
+          </div>
+        </button>
+        <button type="button" class="tool-row" id="tool-music">
+          <span class="tool-ico">🎵</span>
+          <div>
+            <span class="tool-title">Create music</span>
+            <span class="tool-sub">Make audio tracks</span>
+          </div>
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
     const drawer = document.getElementById("drawer");
     const modeMenu = document.getElementById("mode-menu");
     const actionMenu = document.getElementById("action-menu");
+    const plusSheet = document.getElementById("plus-sheet");
     const modeLabel = document.getElementById("mode-label");
     const chatArea = document.getElementById("chat-area");
     const chatInner = document.getElementById("chat-inner");
     const composer = document.getElementById("composer");
     const promptEl = document.getElementById("prompt");
     const actionBtn = document.getElementById("action-btn");
+    const micBtn = document.getElementById("mic-btn");
     const drawerHistory = document.getElementById("drawer-history");
+
+    const photoInput = document.getElementById("photo-input");
+    const cameraInput = document.getElementById("camera-input");
+    const attachPreview = document.getElementById("attach-preview");
+    const attachThumb = document.getElementById("attach-thumb");
+    const attachName = document.getElementById("attach-name");
 
     let currentMode = "Auto";
     let chats = JSON.parse(localStorage.getItem("glowai_exact_chats") || "[]");
     let activeId = null;
     let isGenerating = false;
+    let isListening = false;
+    let attachedImage = null;
 
     if (chats.length === 0) {
       chats = [{ id: "default", title: "AI App Publishing Guide", pinned: false, messages: [] }];
@@ -643,6 +721,30 @@
     function closePopovers() {
       modeMenu.classList.remove("open");
       actionMenu.classList.remove("open");
+      plusSheet.classList.remove("open");
+    }
+
+    function clearAttachment() {
+      attachedImage = null;
+      attachPreview.classList.remove("show");
+      photoInput.value = "";
+      cameraInput.value = "";
+      updateActionIcon();
+    }
+
+    function handleFileSelect(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        const base64 = dataUrl.split(",")[1];
+        attachedImage = { dataUrl, base64, mimeType: file.type || "image/jpeg", name: file.name };
+        attachThumb.src = dataUrl;
+        attachName.textContent = file.name;
+        attachPreview.classList.add("show");
+        updateActionIcon();
+      };
+      reader.readAsDataURL(file);
     }
 
     function renderDrawerHistory() {
@@ -669,7 +771,7 @@
         chatInner.innerHTML = `
           <div class="empty-state">
             <h2>GlowAI</h2>
-            <p>Ask anything to start a conversation.</p>
+            <p>Ask anything, speak with mic, or tap + to attach photos.</p>
           </div>
         `;
         return;
@@ -679,8 +781,21 @@
         const turn = document.createElement("div");
         turn.className = "turn";
         if (m.role === "user") {
-          turn.innerHTML = `<div class="user-msg-row"><div class="user-bubble"></div></div>`;
-          turn.querySelector(".user-bubble").textContent = m.text;
+          const wrap = document.createElement("div");
+          wrap.className = "user-msg-row";
+          if (m.image) {
+            const img = document.createElement("img");
+            img.src = m.image;
+            img.className = "user-img-preview";
+            wrap.appendChild(img);
+          }
+          if (m.text) {
+            const bub = document.createElement("div");
+            bub.className = "user-bubble";
+            bub.textContent = m.text;
+            wrap.appendChild(bub);
+          }
+          turn.appendChild(wrap);
         } else {
           turn.innerHTML = `
             <div class="ai-msg-row">
@@ -695,15 +810,15 @@
     }
 
     function updateActionIcon() {
+      actionBtn.classList.remove("ready", "generating");
       if (isGenerating) {
         actionBtn.textContent = "■";
-        actionBtn.classList.remove("ready");
-      } else if (promptEl.value.trim().length > 0) {
+        actionBtn.classList.add("generating");
+      } else if (promptEl.value.trim().length > 0 || attachedImage) {
         actionBtn.textContent = "↑";
         actionBtn.classList.add("ready");
       } else {
-        actionBtn.textContent = "■";
-        actionBtn.classList.remove("ready");
+        actionBtn.textContent = "↑";
       }
     }
 
@@ -725,18 +840,20 @@
 
     async function sendMessage(text) {
       const clean = text.trim();
-      if (!clean || isGenerating) return;
+      if ((!clean && !attachedImage) || isGenerating) return;
 
       const chat = getActiveChat();
       if (chat.messages.length === 0) {
-        chat.title = clean.slice(0, 34);
+        chat.title = (clean || "Image prompt").slice(0, 34);
       }
 
-      chat.messages.push({ role: "user", text: clean });
+      const currentImg = attachedImage;
+      chat.messages.push({ role: "user", text: clean, image: currentImg ? currentImg.dataUrl : null });
       saveChats();
       renderMessages();
 
       promptEl.value = "";
+      clearAttachment();
       autoResize();
       isGenerating = true;
       updateActionIcon();
@@ -753,11 +870,22 @@
       chatArea.scrollTop = chatArea.scrollHeight;
 
       try {
-        const historyPayload = chat.messages.slice(0, -1).slice(-10);
+        const historyPayload = chat.messages
+          .slice(0, -1)
+          .slice(-10)
+          .filter((m) => m.text)
+          .map((m) => ({ role: m.role, text: m.text }));
+
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: clean, history: historyPayload, mode: currentMode }),
+          body: JSON.stringify({
+            message: clean,
+            history: historyPayload,
+            mode: currentMode,
+            imageBase64: currentImg ? currentImg.base64 : null,
+            imageMimeType: currentImg ? currentImg.mimeType : null,
+          }),
         });
         const data = await res.json();
         const reply = res.ok ? data.reply : (data.error || "Error generating response.");
@@ -773,16 +901,115 @@
       }
     }
 
-       // Event bindings
+    // Smooth Mic Speech-to-Text
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = "hi-IN";
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      let baseTextBeforeSpeech = "";
+
+      recognition.onstart = () => {
+        isListening = true;
+        baseTextBeforeSpeech = promptEl.value.trim();
+        micBtn.classList.add("listening");
+        micBtn.title = "Listening... Tap to stop";
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        promptEl.value = baseTextBeforeSpeech ? `${baseTextBeforeSpeech} ${transcript}`.trim() : transcript.trim();
+        autoResize();
+      };
+
+      recognition.onerror = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.title = "Speak";
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.title = "Speak";
+        promptEl.focus();
+      };
+
+      micBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (isListening) {
+          recognition.stop();
+        } else {
+          try {
+            recognition.start();
+          } catch (_) {}
+        }
+      };
+    } else {
+      micBtn.onclick = () => alert("Is browser mein voice input support nahi hai. Chrome try karo.");
+    }
+
+    // '+' Bottom Sheet actions
+    document.getElementById("plus-btn").onclick = (e) => {
+      e.stopPropagation();
+      modeMenu.classList.remove("open");
+      actionMenu.classList.remove("open");
+      plusSheet.classList.toggle("open");
+    };
+
+    plusSheet.onclick = () => plusSheet.classList.remove("open");
+
+    document.getElementById("tile-photos").onclick = () => { closePopovers(); photoInput.click(); };
+    document.getElementById("tile-camera").onclick = () => { closePopovers(); cameraInput.click(); };
+    document.getElementById("tile-avatar").onclick = () => {
+      closePopovers();
+      promptEl.value = "Create a stylized 3D avatar concept: ";
+      autoResize();
+      promptEl.focus();
+    };
+
+    document.getElementById("tool-images").onclick = () => {
+      closePopovers();
+      promptEl.value = "Create an image prompt / visual concept for: ";
+      autoResize();
+      promptEl.focus();
+    };
+
+    document.getElementById("tool-videos").onclick = () => {
+      closePopovers();
+      promptEl.value = "Create a video script & scene storyboard for: ";
+      autoResize();
+      promptEl.focus();
+    };
+
+    document.getElementById("tool-music").onclick = () => {
+      closePopovers();
+      promptEl.value = "Write lyrics & music composition idea for: ";
+      autoResize();
+      promptEl.focus();
+    };
+
+    photoInput.onchange = (e) => handleFileSelect(e.target.files[0]);
+    cameraInput.onchange = (e) => handleFileSelect(e.target.files[0]);
+    document.getElementById("remove-attach").onclick = clearAttachment;
+
+    // Header & Drawer actions
     document.getElementById("open-drawer").onclick = (e) => { e.stopPropagation(); closePopovers(); drawer.classList.add("open"); };
     document.getElementById("close-drawer").onclick = () => drawer.classList.remove("open");
     document.getElementById("quick-new").onclick = newChat;
     document.getElementById("drawer-new-chat").onclick = newChat;
-    document.getElementById("plus-btn").onclick = () => { promptEl.value = ""; autoResize(); promptEl.focus(); };
 
     document.getElementById("mode-toggle").onclick = (e) => {
       e.stopPropagation();
       actionMenu.classList.remove("open");
+      plusSheet.classList.remove("open");
       modeMenu.classList.toggle("open");
     };
 
@@ -803,6 +1030,7 @@
     document.getElementById("more-toggle").onclick = (e) => {
       e.stopPropagation();
       modeMenu.classList.remove("open");
+      plusSheet.classList.remove("open");
       actionMenu.classList.toggle("open");
     };
 
@@ -829,7 +1057,7 @@
       closePopovers();
     };
 
-    document.getElementById("act-help").onclick = () => { alert("GlowAI Help: Type any question below."); closePopovers(); };
+    document.getElementById("act-help").onclick = () => { alert("GlowAI Help: Type, speak with mic, or tap + to upload photos."); closePopovers(); };
     document.getElementById("act-feedback").onclick = () => { alert("Feedback noted."); closePopovers(); };
 
     document.getElementById("act-delete").onclick = () => {
@@ -850,7 +1078,6 @@
         drawer.classList.remove("open");
       }
     };
-
     document.addEventListener("click", closePopovers);
 
     promptEl.addEventListener("input", autoResize);
