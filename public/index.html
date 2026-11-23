@@ -162,10 +162,32 @@
       background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570);
       display: grid; place-items: center; font-size: 13px; color: #fff; flex-shrink: 0; margin-top: 3px;
     }
-    .ai-content { flex: 1; font-size: 15.5px; line-height: 1.65; color: var(--text); min-width: 0; }
+    .ai-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .ai-content { font-size: 15.5px; line-height: 1.65; color: var(--text); }
     .ai-content p { margin-bottom: 10px; }
     .ai-content p:last-child { margin-bottom: 0; }
     .ai-content pre { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; overflow-x: auto; margin: 10px 0; }
+
+    .ai-actions {
+      display: flex; align-items: center; gap: 8px; margin-top: 2px;
+    }
+    .mini-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+      font-size: 12px; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    }
+    .mini-btn:hover { color: var(--text); background: var(--elevated); }
+
+    .pulse-dots { display: inline-flex; gap: 4px; align-items: center; }
+    .pulse-dots span {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--muted);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+    .pulse-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .pulse-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+      40% { opacity: 1; transform: scale(1.1); }
+    }
 
     .attach-preview {
       max-width: 780px; margin: 0 auto 8px; display: none; align-items: center;
@@ -442,14 +464,40 @@
       clearAttachment();
       const reader = new FileReader();
       reader.onload = () => {
-        const dataUrl = reader.result;
-        const base64 = dataUrl.split(",")[1];
-    attachedImage = { dataUrl, base64, mimeType: file.type || "image/jpeg", name: file.name };
-        attachThumb.src = dataUrl;
-        attachThumb.style.display = "block";
-        attachName.textContent = file.name;
-        attachPreview.classList.add("show");
-        updateActionIcon();
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1024;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.78);
+          const base64 = compressedDataUrl.split(",")[1];
+          attachedImage = {
+            dataUrl: compressedDataUrl,
+            base64,
+            mimeType: "image/jpeg",
+            name: file.name,
+          };
+          attachThumb.src = compressedDataUrl;
+          attachThumb.style.display = "block";
+          attachName.textContent = file.name;
+          attachPreview.classList.add("show");
+          updateActionIcon();
+        };
+        img.src = reader.result;
       };
       reader.readAsDataURL(file);
     }
@@ -487,6 +535,55 @@
       });
     }
 
+    async function regenerateAt(modelMsgIndex) {
+      if (isGenerating) return;
+      const chat = getActiveChat();
+      let prevUserIndex = modelMsgIndex - 1;
+      while (prevUserIndex >= 0 && chat.messages[prevUserIndex].role !== "user") {
+        prevUserIndex--;
+      }
+      if (prevUserIndex < 0) return;
+
+      const userMsg = chat.messages[prevUserIndex];
+      const historyBefore = chat.messages
+        .slice(0, prevUserIndex)
+        .slice(-8)
+        .filter((m) => m.text)
+        .map((m) => ({ role: m.role, text: m.text }));
+
+      isGenerating = true;
+      updateActionIcon();
+      chat.messages[modelMsgIndex] = { role: "model", text: "_Regenerating..._" };
+      saveChats();
+      renderMessages();
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: userMsg.text || "",
+            history: historyBefore,
+            mode: currentMode,
+            imageBase64: userMsg.image ? userMsg.image.split(",")[1] : null,
+            imageMimeType: userMsg.image ? "image/jpeg" : null,
+          }),
+        });
+        const data = await res.json();
+        chat.messages[modelMsgIndex] = {
+          role: "model",
+          text: res.ok ? data.reply : (data.error || "Error regenerating response."),
+        };
+      } catch (_) {
+        chat.messages[modelMsgIndex] = { role: "model", text: "Network error. Please try again." };
+      } finally {
+        isGenerating = false;
+        saveChats();
+        renderMessages();
+        updateActionIcon();
+      }
+    }
+
     function renderMessages() {
       const chat = getActiveChat();
       chatInner.innerHTML = "";
@@ -500,7 +597,7 @@
         return;
       }
 
-      chat.messages.forEach((m) => {
+      chat.messages.forEach((m, idx) => {
         const turn = document.createElement("div");
         turn.className = "turn";
         if (m.role === "user") {
@@ -526,12 +623,47 @@
           }
           turn.appendChild(wrap);
         } else {
-          turn.innerHTML = `
-            <div class="ai-msg-row">
-              <div class="ai-mark">✦</div>
-              <div class="ai-content">${window.marked ? marked.parse(m.text) : m.text}</div>
-            </div>
-          `;
+          const row = document.createElement("div");
+          row.className = "ai-msg-row";
+
+          const mark = document.createElement("div");
+          mark.className = "ai-mark";
+          mark.textContent = "✦";
+
+          const body = document.createElement("div");
+          body.className = "ai-body";
+
+          const content = document.createElement("div");
+          content.className = "ai-content";
+          content.innerHTML = window.marked ? marked.parse(m.text) : m.text;
+
+          const actions = document.createElement("div");
+          actions.className = "ai-actions";
+
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.className = "mini-btn";
+          copyBtn.textContent = "Copy";
+          copyBtn.onclick = () => {
+            navigator.clipboard?.writeText(m.text);
+            copyBtn.textContent = "Copied ✓";
+            setTimeout(() => (copyBtn.textContent = "Copy"), 1400);
+          };
+
+          const regenBtn = document.createElement("button");
+          regenBtn.type = "button";
+          regenBtn.className = "mini-btn";
+          regenBtn.textContent = "Regenerate";
+          regenBtn.onclick = () => regenerateAt(idx);
+
+          actions.appendChild(copyBtn);
+          actions.appendChild(regenBtn);
+
+          body.appendChild(content);
+          body.appendChild(actions);
+          row.appendChild(mark);
+          row.appendChild(body);
+          turn.appendChild(row);
         }
         chatInner.appendChild(turn);
       });
@@ -599,7 +731,7 @@
       tempTurn.innerHTML = `
         <div class="ai-msg-row">
           <div class="ai-mark">✦</div>
-          <div class="ai-content">Thinking...</div>
+          <div class="ai-content"><div class="pulse-dots"><span></span><span></span><span></span></div></div>
         </div>
       `;
       chatInner.appendChild(tempTurn);
@@ -608,7 +740,7 @@
       try {
         const historyPayload = chat.messages
           .slice(0, -1)
-          .slice(-10)
+          .slice(-8)
           .filter((m) => m.text)
           .map((m) => ({ role: m.role, text: m.text }));
 
@@ -630,7 +762,7 @@
         const reply = res.ok ? data.reply : (data.error || "Error generating response.");
         chat.messages.push({ role: "model", text: reply });
         saveChats();
-      } catch (err) {
+      } catch (_) {
         chat.messages.push({ role: "model", text: "Network error. Please try again." });
         saveChats();
       } finally {
