@@ -20,51 +20,40 @@ const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json({ limit: "12mb" }));
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  next();
+});
+
+app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", service: "GlowAI", active: true });
+  res.status(200).json({ status: "ok", active: true });
 });
 
 function getSystemPrompt(mode = "Auto") {
   const nowIST = new Date().toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
-    weekday: "long",
+    weekday: "short",
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
   });
 
-  const base = [
-    `You are GlowAI, a helpful, clear, and practical AI assistant. Current time (IST): ${nowIST}.`,
-    "Match the user's language naturally (clear Hinglish, Hindi, or English—avoid broken or unnatural phrasing).",
-    "Give direct, accurate, well-organized answers without filler. If something is uncertain or needs official verification, say so plainly.",
-  ].join(" ");
-
-  if (mode === "Deeper analysis") {
-    return (
-      base +
-      " Break down the problem step-by-step, check edge cases, show clear reasoning, and conclude with a crisp summary."
-    );
-  }
-  if (mode === "Code and complex work") {
-    return (
-      base +
-      " Write clean, practical, bug-free code with concise explanations and edge cases."
-    );
-  }
+  const base = `You are GlowAI. Current IST: ${nowIST}. Reply directly, clearly, and accurately in the user's language (Hindi, Hinglish, or English).`;
+  if (mode === "Deeper analysis") return base + " Give step-by-step reasoning and a clear final answer.";
+  if (mode === "Code and complex work") return base + " Provide clean, working code with brief explanation.";
   return base;
 }
 
 const TEXT_MODELS = [
-  "openrouter/free",
-  "meta-llama/llama-3.3-70b-instruct",
-  "qwen/qwen-2.5-72b-instruct:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
   "google/gemma-3-27b-it:free",
+  "qwen/qwen-2.5-72b-instruct:free",
+  "openrouter/free",
 ];
 
 const VISION_MODELS = [
@@ -73,9 +62,9 @@ const VISION_MODELS = [
   "openrouter/free",
 ];
 
-async function callOpenRouter(apiKey, model, messages) {
+async function queryModel(apiKey, model, messages) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45000);
+  const timer = setTimeout(() => controller.abort(), 25000);
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -89,23 +78,23 @@ async function callOpenRouter(apiKey, model, messages) {
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.3,
-        max_tokens: 1800,
+        temperature: 0.4,
+        max_tokens: 1600,
       }),
       signal: controller.signal,
     });
 
     const data = await response.json();
     if (!response.ok) {
-      const msg = data?.error?.message || `HTTP ${response.status}`;
-      throw new Error(`[${model}] ${msg}`);
+      throw new Error(data?.error?.message || `HTTP ${response.status}`);
     }
-    return data?.choices?.[0]?.message?.content || "Koi jawab nahi mila.";
-  } catch (err) {
-    if (err?.name === "AbortError") {
-      throw new Error(`[${model}] Model ne 45s mein reply nahi diya (slow/busy).`);
+
+    const msg = data?.choices?.[0]?.message;
+    const text = (msg?.content || msg?.reasoning || "").trim();
+    if (!text) {
+      throw new Error("Empty model output");
     }
-    throw err;
+    return text;
   } finally {
     clearTimeout(timer);
   }
@@ -115,7 +104,7 @@ app.post("/api/chat", async (req, res) => {
   try {
     const apiKey = (process.env.OPENROUTER_API_KEY || "").trim();
     if (!apiKey) {
-      return res.status(500).json({ error: "Render Environment mein OPENROUTER_API_KEY set nahi hai." });
+      return res.status(500).json({ error: "OPENROUTER_API_KEY set nahi hai." });
     }
 
     const {
@@ -129,67 +118,55 @@ app.post("/api/chat", async (req, res) => {
       docName = "",
     } = req.body;
 
-    let finalPrompt = message.trim();
+    let promptText = message.trim();
 
     if (docBase64) {
       const buffer = Buffer.from(docBase64, "base64");
-      let extractedText = "";
-
+      let docText = "";
       if (docMimeType === "application/pdf" || docName.toLowerCase().endsWith(".pdf")) {
         if (!pdfParse) {
-          return res.status(400).json({ error: "pdf-parse package installed nahi hai." });
+          return res.status(400).json({ error: "pdf-parse installed nahi hai." });
         }
         const parsed = await pdfParse(buffer);
-        extractedText = (parsed?.text || "").trim();
+        docText = (parsed?.text || "").trim();
       } else {
-        extractedText = buffer.toString("utf8").trim();
+        docText = buffer.toString("utf8").trim();
       }
-
-      if (!extractedText) {
-        return res.status(400).json({
-          error: "PDF ka text extract nahi ho paya (scanned PDF ho sakti hai). Photo attach karke bhejein.",
-        });
+      if (!docText) {
+        return res.status(400).json({ error: "PDF ka text nahi mil paya. Photo bhej kar try karein." });
       }
-
-      finalPrompt = `${finalPrompt || "Is document ko clear aur accurately summarize karo."}\n\n[Document: ${docName}]\n${extractedText.slice(0, 9500)}`;
+      promptText = `${promptText || "Is document ko summarize karo."}\n\n${docText.slice(0, 7000)}`;
     }
 
-    if (!finalPrompt && !imageBase64) {
-      return res.status(400).json({ error: "Message, photo, ya document bhejein." });
+    if (!promptText && !imageBase64) {
+      return res.status(400).json({ error: "Message ya file bhejein." });
     }
-
-    const formattedHistory = history.slice(-8).map((item) => ({
-      role: item.role === "user" ? "user" : "assistant",
-      content: item.text,
-    }));
 
     const isVision = Boolean(imageBase64 && imageMimeType);
-    const userContent = isVision
-      ? [
-          {
-            type: "text",
-            text: finalPrompt || "Is photo ko dekh kar jo poocha gaya hai uska sahi jawab do.",
-          },
-          {
-            type: "image_url",
-            image_url: { url: `data:${imageMimeType};base64,${imageBase64}` },
-          },
-        ]
-      : finalPrompt;
-
     const messages = [
       { role: "system", content: getSystemPrompt(mode) },
-      ...formattedHistory,
-      { role: "user", content: userContent },
+      ...history.slice(-4).map((m) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.text,
+      })),
+      {
+        role: "user",
+        content: isVision
+          ? [
+              { type: "text", text: promptText || "Is photo ke baare mein batao." },
+              { type: "image_url", image_url: { url: `data:${imageMimeType};base64,${imageBase64}` } },
+            ]
+          : promptText,
+      },
     ];
 
-    const modelsToTry = isVision ? VISION_MODELS : TEXT_MODELS;
-    let lastError = "OpenRouter request failed.";
+    const models = isVision ? VISION_MODELS : TEXT_MODELS;
+    let lastError = "Model response failed.";
 
-    for (const model of modelsToTry) {
+    for (const model of models) {
       try {
-        const reply = await callOpenRouter(apiKey, model, messages);
-        return res.json({ reply, modelUsed: model });
+        const reply = await queryModel(apiKey, model, messages);
+        return res.json({ reply });
       } catch (err) {
         lastError = err?.message || lastError;
       }
@@ -197,8 +174,7 @@ app.post("/api/chat", async (req, res) => {
 
     return res.status(400).json({ error: `API Error: ${lastError}` });
   } catch (err) {
-    console.error("GlowAI Error:", err);
-    res.status(500).json({ error: err?.message || "Server response error." });
+    res.status(500).json({ error: err?.message || "Server error." });
   }
 });
 
