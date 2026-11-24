@@ -88,7 +88,7 @@
     .popover {
       position: fixed;
       top: 50px;
-      width: 220px;
+      width: 225px;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -146,10 +146,10 @@
     .chat-stage { flex: 1; overflow-y: auto; padding: 16px 14px 20px; scroll-behavior: smooth; }
     .chat-container {
       max-width: 740px; margin: 0 auto; display: flex;
-      flex-direction: column; gap: 16px; min-height: 100%;
+      flex-direction: column; gap: 18px; min-height: 100%;
     }
 
-    .hero-empty { margin: auto; text-align: center; max-width: 420px; padding: 16px; }
+    .hero-empty { margin: auto; text-align: center; max-width: 430px; padding: 16px; }
     .hero-empty h1 { font-size: 26px; font-weight: 600; margin-bottom: 6px; }
     .hero-empty p { font-size: 13.5px; color: var(--muted); }
 
@@ -183,8 +183,9 @@
       border: 1px solid var(--border); display: grid; place-items: center;
       font-size: 12px; color: #a5b4fc; flex-shrink: 0; margin-top: 3px;
     }
+    .ai-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
     .ai-box {
-      flex: 1; min-width: 0; font-size: 14.5px; line-height: 1.65; color: var(--text);
+      font-size: 14.5px; line-height: 1.65; color: var(--text);
     }
     .ai-box p { margin-bottom: 10px; }
     .ai-box p:last-child { margin-bottom: 0; }
@@ -193,6 +194,20 @@
       background: var(--card); border: 1px solid var(--border); border-radius: 12px;
       padding: 12px; overflow-x: auto; margin: 8px 0; font-size: 13px;
     }
+    .ai-box table {
+      width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13.5px;
+    }
+    .ai-box th, .ai-box td {
+      border: 1px solid var(--border); padding: 7px 10px; text-align: left;
+    }
+    .ai-box th { background: var(--card); }
+
+    .ai-tools { display: flex; gap: 6px; align-items: center; }
+    .chip-btn {
+      background: var(--card); border: 1px solid var(--border); color: var(--muted);
+      font-size: 11.5px; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    }
+    .chip-btn:hover { color: var(--text); background: var(--card-hover); }
 
     .typing-dots { display: inline-flex; gap: 4px; align-items: center; height: 20px; }
     .typing-dots span {
@@ -203,7 +218,6 @@
     .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
 
-    /* Clean Bottom Dock */
     .dock {
       padding: 8px 12px 14px;
       background: var(--bg);
@@ -269,7 +283,6 @@
       place-items: center;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.15s ease, color 0.15s ease;
     }
     .circle-btn:hover { background: var(--card-hover); color: var(--text); }
     .circle-btn.active-mic { background: #dc2626; color: #fff; }
@@ -327,7 +340,7 @@
 
   <div class="popover" id="mode-popover">
     <button class="pop-item" data-mode="Auto">
-      <div><strong>Auto</strong><span class="pop-sub">Fast & balanced</span></div>
+      <div><strong>Auto</strong><span class="pop-sub">Fast & verified</span></div>
       <span class="chk">✓</span>
     </button>
     <button class="pop-item" data-mode="Deeper analysis">
@@ -394,7 +407,7 @@
       navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
     }
 
-    const STORAGE_KEY = "glowai_v4_sessions";
+    const STORAGE_KEY = "glowai_v5_sessions";
     let mode = "Auto";
     let busy = false;
     let filePayload = null;
@@ -446,7 +459,7 @@
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          const max = 880;
+          const max = 960;
           let { width, height } = img;
           if (width > max || height > max) {
             if (width > height) { height = Math.round((height * max) / width); width = max; }
@@ -456,7 +469,7 @@
           canvas.width = width;
           canvas.height = height;
           canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.78);
           filePayload = {
             kind: "image",
             dataUrl,
@@ -513,6 +526,104 @@
       });
     }
 
+    async function streamReplyToBox(payload, targetBox, onComplete) {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const errText = errData?.error || "Unable to fetch reply.";
+        targetBox.innerHTML = window.marked ? marked.parse(errText) : errText;
+        onComplete(errText);
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const dataStr = trimmed.slice(5).trim();
+          if (dataStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (parsed.token) {
+              fullText += parsed.token;
+              targetBox.innerHTML = window.marked ? marked.parse(fullText) : fullText;
+              el("chat-stage").scrollTop = el("chat-stage").scrollHeight;
+            }
+          } catch (_) {}
+        }
+      }
+
+      const finalOut = fullText.trim() || "Jawab generate nahi ho paya.";
+      targetBox.innerHTML = window.marked ? marked.parse(finalOut) : finalOut;
+      onComplete(finalOut);
+    }
+
+    async function regenerateIndex(aiIdx) {
+      if (busy) return;
+      const s = currentSession();
+      let uIdx = aiIdx - 1;
+      while (uIdx >= 0 && s.messages[uIdx].role !== "user") uIdx--;
+      if (uIdx < 0) return;
+
+      const userMsg = s.messages[uIdx];
+      const history = s.messages
+        .slice(0, uIdx)
+        .slice(-6)
+        .filter((m) => m.text)
+        .map((m) => ({ role: m.role, text: m.text }));
+
+      busy = true;
+      syncSendButton();
+  s.messages[aiIdx] = { role: "model", text: "" };
+      renderMessages();
+
+      const boxes = el("chat-container").querySelectorAll(".ai-box");
+      const targetBox = boxes[boxes.length - 1];
+      if (targetBox) {
+        targetBox.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+      }
+
+      try {
+        await streamReplyToBox(
+          {
+            message: userMsg.text || "",
+            history,
+            mode,
+            imageBase64: userMsg.image ? userMsg.image.split(",")[1] : null,
+            imageMimeType: userMsg.image ? "image/jpeg" : null,
+          },
+          targetBox,
+          (finalReply) => {
+            s.messages[aiIdx] = { role: "model", text: finalReply };
+            persist();
+          }
+        );
+      } catch (_) {
+        s.messages[aiIdx] = { role: "model", text: "Connection error. Please try again." };
+        persist();
+      } finally {
+        busy = false;
+        renderMessages();
+        syncSendButton();
+      }
+    }
+
     function renderMessages() {
       const s = currentSession();
       const box = el("chat-container");
@@ -522,12 +633,12 @@
         box.innerHTML = `
           <div class="hero-empty">
             <h1>How can I help?</h1>
-            <p>Ask anything, upload photos or PDFs, or use voice.</p>
+            <p>High-accuracy answers, live search, photo & PDF analysis.</p>
             <div class="quick-grid">
-              <button class="quick-card" data-q="Give me a crisp study plan for SSC quant & GK">SSC Quant & GK Plan</button>
-              <button class="quick-card" data-q="Explain JavaScript async/await with a clean example">JS Async/Await</button>
-              <button class="quick-card" data-q="Give 5 short hooks for a tech reel">Short Reel Hooks</button>
-              <button class="quick-card" data-q="What is today's date and day in India?">Today's Date & Day</button>
+              <button class="quick-card" data-q="Solve step-by-step: Average of 11 numbers is 50. First 6 average is 49 and last 6 is 52. Find the 6th number.">SSC Average Problem</button>
+              <button class="quick-card" data-q="Give a crisp 30-day SSC GK & Quant revision strategy">30-Day SSC Strategy</button>
+              <button class="quick-card" data-q="Explain JavaScript async/await with a clean working example">JS Async/Await</button>
+              <button class="quick-card" data-q="What is today's date, day, and current time in India?">Today's Date & Day</button>
             </div>
           </div>
         `;
@@ -537,7 +648,7 @@
         return;
       }
 
-      s.messages.forEach((m) => {
+      s.messages.forEach((m, idx) => {
         if (m.role === "user") {
           const wrap = document.createElement("div");
           wrap.className = "msg-user";
@@ -563,10 +674,51 @@
         } else {
           const row = document.createElement("div");
           row.className = "msg-ai";
-          row.innerHTML = `
-            <div class="ai-avatar">✦</div>
-            <div class="ai-box">${window.marked ? marked.parse(m.text) : m.text}</div>
-          `;
+
+          const av = document.createElement("div");
+          av.className = "ai-avatar";
+          av.textContent = "✦";
+
+          const col = document.createElement("div");
+          col.className = "ai-col";
+
+          const content = document.createElement("div");
+          content.className = "ai-box";
+          content.innerHTML = m.text
+            ? window.marked
+              ? marked.parse(m.text)
+              : m.text
+            : `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+
+          col.appendChild(content);
+
+          if (m.text && !busy) {
+            const tools = document.createElement("div");
+            tools.className = "ai-tools";
+
+            const copyBtn = document.createElement("button");
+            copyBtn.type = "button";
+            copyBtn.className = "chip-btn";
+            copyBtn.textContent = "Copy";
+            copyBtn.onclick = () => {
+              navigator.clipboard?.writeText(m.text);
+              copyBtn.textContent = "Copied ✓";
+              setTimeout(() => (copyBtn.textContent = "Copy"), 1300);
+            };
+
+            const regenBtn = document.createElement("button");
+            regenBtn.type = "button";
+            regenBtn.className = "chip-btn";
+            regenBtn.textContent = "Regenerate";
+            regenBtn.onclick = () => regenerateIndex(idx);
+
+            tools.appendChild(copyBtn);
+            tools.appendChild(regenBtn);
+            col.appendChild(tools);
+          }
+
+          row.appendChild(av);
+          row.appendChild(col);
           box.appendChild(row);
         }
       });
@@ -616,6 +768,9 @@
         docName: attached?.kind === "doc" ? attached.name : null,
       });
 
+      const placeholderIdx = s.messages.length;
+      s.messages.push({ role: "model", text: "" });
+
       el("inp").value = "";
       clearFile();
       resizeInput();
@@ -624,26 +779,18 @@
       persist();
       renderMessages();
 
-      const loader = document.createElement("div");
-      loader.className = "msg-ai";
-      loader.innerHTML = `
-        <div class="ai-avatar">✦</div>
-        <div class="ai-box"><div class="typing-dots"><span></span><span></span><span></span></div></div>
-      `;
-      el("chat-container").appendChild(loader);
-      el("chat-stage").scrollTop = el("chat-stage").scrollHeight;
+      const boxes = el("chat-container").querySelectorAll(".ai-box");
+      const targetBox = boxes[boxes.length - 1];
 
       try {
         const history = s.messages
-          .slice(0, -1)
-          .slice(-4)
+          .slice(0, -2)
+          .slice(-6)
           .filter((m) => m.text)
           .map((m) => ({ role: m.role, text: m.text }));
 
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        await streamReplyToBox(
+          {
             message: text,
             history,
             mode,
@@ -652,17 +799,18 @@
             docBase64: attached?.kind === "doc" ? attached.base64 : null,
             docMimeType: attached?.kind === "doc" ? attached.mimeType : null,
             docName: attached?.kind === "doc" ? attached.name : "",
-          }),
-        });
-
-        const data = await res.json();
-        const reply = res.ok ? data.reply : (data.error || "Unable to fetch reply.");
-        s.messages.push({ role: "model", text: reply });
+          },
+          targetBox,
+          (finalReply) => {
+            s.messages[placeholderIdx] = { role: "model", text: finalReply };
+            persist();
+          }
+        );
       } catch (_) {
-        s.messages.push({ role: "model", text: "Connection error. Please try again." });
+        s.messages[placeholderIdx] = { role: "model", text: "Connection error. Please try again." };
+        persist();
       } finally {
         busy = false;
-        persist();
         renderMessages();
         syncSendButton();
       }
